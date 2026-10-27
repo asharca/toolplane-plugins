@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "skill",
+  "listing": {
+    "slug": "ocrplane-cli",
+    "name": "OcrPlane CLI",
+    "summary": "Use the OcrPlane CLI when the user uploads PDFs, images, DOCX, XLSX, PPTX, CSV, or asks to extract OCR text, markdown, tables, formulas, or structured document content.",
+    "iconUrl": null,
+    "tags": ["documents", "developer-tools"],
+    "author": "ToolPlane"
+  },
+  "skill": {
+    "name": "ocrplane-cli",
+    "slug": "ocrplane-cli",
+    "description": "Use the OcrPlane CLI when the user uploads PDFs, images, DOCX, XLSX, PPTX, CSV, or asks to extract OCR text, markdown, tables, formulas, or structured document content.",
+    "userInvocable": true,
+    "agentInvocable": true,
+    "effort": "default"
+  }
+}

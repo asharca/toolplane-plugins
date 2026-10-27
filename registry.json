@@ -1,13 +1,11 @@
 {
-  "name": "ToolPlane Skills",
-  "root": "skills",
-  "skills": [
+  "schemaVersion": 1,
+  "resources": [
     {
-      "slug": "ocrplane-cli",
-      "path": "skills/ocrplane-cli",
-      "categories": ["documents", "developer-tools"],
-      "curated": true,
-      "score": 9100
+      "id": "ocrplane-cli",
+      "kind": "skill",
+      "version": "1.0.0",
+      "path": "skills/ocrplane-cli"
     }
   ]
 }

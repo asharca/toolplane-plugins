@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "asharca/tp-skills",
+    "commit": "290dbb26ded67d0054c3ca468f1ad1aec09f4951"
+  },
+  "resources": [
+    {
+      "id": "ocrplane-cli",
+      "version": "1.0.0",
+      "path": "skills/ocrplane-cli",
+      "originalFiles": [
+        {
+          "sourcePath": "skills/ocrplane-cli/SKILL.md",
+          "targetPath": "skills/ocrplane-cli/SKILL.md",
+          "mode": "100644",
+          "gitBlob": "8fac7c2400f866d0e81969c339a2ed46244f4996",
+          "bytes": 4368,
+          "sha256": "bb8e23e45c177f0a962b45b7a19b3c03b84d53f3dfda5f7caf690069f9bc30ca"
+        }
+      ]
+    }
+  ]
+}
