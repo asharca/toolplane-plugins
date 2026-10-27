@@ -84,11 +84,25 @@ reads instructions as data and does not execute skill scripts.
 
 For `pi-package`, `resource.json` contains the schema header and listing only;
 the actual pinned directory and `package.json` are captured as the package.
-MCP, Agent, and Assistant descriptors use ToolPlane's existing portable release
-schemas, with `mcp`, `agent`, or `assistant` payloads respectively. Never include
-workspace/user credential IDs, API keys, access tokens, private environment
-values, or other secrets. Runtime authorization and credentials are configured
-inside ToolPlane, not in this public repository.
+MCP and Assistant descriptors use ToolPlane's existing portable release schemas,
+with `mcp` or `assistant` payloads respectively. An Agent descriptor instead uses
+a **flat portable graph**: `schemaVersion`, `kind: "agent"`, `listing`,
+`rootAgentKey`, `agents`, `deployments`, `skills`, and `toolkits` are root fields;
+there is no nested `agent` payload. `agents` contains 1–64 definitions; the other
+graph arrays allow up to 512 entries, but `toolkits` and each Agent's `toolkitKeys`
+must be empty. Agent templates support only Pi (`runtime: {"kind": "pi"}`);
+omitting runtime selects Pi. Existing non-Pi execution is not restored.
+
+Never include workspace/user credential IDs, API keys, access tokens, private
+environment values, unsafe skill paths, unpinned MCP recipes, or other secrets.
+Runtime authorization and credentials are configured inside ToolPlane, not in
+this public repository. Imported Agents are Pi drafts requiring explicit
+reauthorization before execution; importing a graph does not grant access.
+
+GitHub registry descriptors are the only catalog authoring path, including Agent
+and Assistant templates. Manual workspace/admin catalog create/edit/publish
+flows are retired. Creating or editing a workspace Agent/Assistant remains a
+separate runtime activity and does not publish it to the Resource Center.
 
 ## Maintaining and syncing
 

@@ -77,7 +77,8 @@ for (const resource of registry.resources) {
   await safeTree(directory);
   assert((await realpath(directory)).startsWith(`${root}${path.sep}`), "Resource escapes repository");
   const descriptor = await json(path.join(directory, "resource.json"));
-  const payload = resource.kind === "pi-package" ? [] : [resource.kind];
+  const payload = resource.kind === "pi-package" ? [] : resource.kind === "agent"
+    ? ["rootAgentKey", "agents", "deployments", "skills", "toolkits"] : [resource.kind];
   object(descriptor, ["schemaVersion", "kind", "listing", ...payload]);
   assert.equal(descriptor.schemaVersion, 1);
   assert.equal(descriptor.kind, resource.kind);
@@ -97,6 +98,22 @@ for (const resource of registry.resources) {
     text(manifest.name, 214);
     text(manifest.version, 128);
     assert(semver.test(manifest.version), "Package version must be SemVer");
+  } else if (resource.kind === "agent") {
+    text(descriptor.rootAgentKey, 80);
+    assert(Array.isArray(descriptor.agents) && descriptor.agents.length >= 1 && descriptor.agents.length <= 64);
+    for (const key of ["deployments", "skills", "toolkits"]) {
+      assert(Array.isArray(descriptor[key]) && descriptor[key].length <= 512, `Invalid ${key}`);
+    }
+    assert.equal(descriptor.toolkits.length, 0, "Toolkit composites are not accepted");
+    for (const agent of descriptor.agents) {
+      assert(agent && typeof agent === "object" && !Array.isArray(agent));
+      assert(Array.isArray(agent.toolkitKeys) && agent.toolkitKeys.length === 0, "Toolkit bindings are not accepted");
+      if (agent.runtime !== undefined) {
+        object(agent.runtime, ["kind"]);
+        assert.equal(agent.runtime.kind, "pi", "Only Pi Agent templates are accepted");
+      }
+    }
+    // Complete portable graph validation and explicit runtime reauthorization happen in ToolPlane.
   } else {
     const value = descriptor[resource.kind];
     assert(value && typeof value === "object" && !Array.isArray(value), "Missing portable payload");
