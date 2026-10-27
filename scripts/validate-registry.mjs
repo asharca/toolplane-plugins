@@ -105,6 +105,14 @@ for (const resource of registry.resources) {
       assert(Array.isArray(descriptor[key]) && descriptor[key].length <= 512, `Invalid ${key}`);
     }
     assert.equal(descriptor.toolkits.length, 0, "Toolkit composites are not accepted");
+    for (const deployment of descriptor.deployments) {
+      assert(deployment && typeof deployment === "object" && !Array.isArray(deployment));
+      object(deployment.publicEnv, []);
+      assert(Array.isArray(deployment.requiredEnv) && deployment.requiredEnv.length <= 256, "Invalid environment requirements");
+      for (const name of deployment.requiredEnv) {
+        assert(typeof name === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(name), "Environment requirements contain names only");
+      }
+    }
     for (const agent of descriptor.agents) {
       assert(agent && typeof agent === "object" && !Array.isArray(agent));
       assert(Array.isArray(agent.toolkitKeys) && agent.toolkitKeys.length === 0, "Toolkit bindings are not accepted");

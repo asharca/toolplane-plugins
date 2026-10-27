@@ -98,6 +98,10 @@ environment values, unsafe skill paths, unpinned MCP recipes, or other secrets.
 Runtime authorization and credentials are configured inside ToolPlane, not in
 this public repository. Imported Agents are Pi drafts requiring explicit
 reauthorization before execution; importing a graph does not grant access.
+Every Agent deployment's `publicEnv` must be exactly `{}`. Declare environment
+variable names only in `requiredEnv`; never embed any environment values,
+including opaque values that do not match a known token pattern. This admission
+rule applies to new GitHub descriptors, not a rewrite of historical releases.
 
 GitHub registry descriptors are the only catalog authoring path, including Agent
 and Assistant templates. Manual workspace/admin catalog create/edit/publish
