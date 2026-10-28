@@ -50,32 +50,7 @@ async function json(filename) {
   return JSON.parse(await readFile(filename, "utf8"));
 }
 
-const registry = await json(path.join(root, "registry.json"));
-object(registry, ["schemaVersion", "resources"]);
-assert.equal(registry.schemaVersion, 1);
-assert(Array.isArray(registry.resources) && registry.resources.length <= 200);
-const ids = new Set();
-for (const resource of registry.resources) {
-  object(resource, ["id", "kind", "version", "path"], ["source"]);
-  assert(typeof resource.id === "string" && /^[a-z0-9][a-z0-9._-]{0,99}$/.test(resource.id));
-  assert(!ids.has(resource.id), `Duplicate id: ${resource.id}`);
-  ids.add(resource.id);
-  assert(kinds.includes(resource.kind), "Unsupported resource kind");
-  text(resource.version, 128);
-  assert(semver.test(resource.version), "Version must be SemVer");
-  relativeDirectory(resource.path);
-  if (resource.source !== undefined) {
-    object(resource.source, ["repository", "commit", "path"]);
-    assert(typeof resource.source.repository === "string" && repository.test(resource.source.repository));
-    assert(!resource.source.repository.endsWith(".git") && !resource.source.repository.endsWith("/.."));
-    assert(typeof resource.source.commit === "string" && /^[a-f0-9]{40}$/.test(resource.source.commit));
-    relativeDirectory(resource.source.path);
-    // Remote content is validated by ToolPlane at the exact pinned commit, not fetched or executed in CI.
-    continue;
-  }
-  const directory = path.join(root, resource.path);
-  await safeTree(directory);
-  assert((await realpath(directory)).startsWith(`${root}${path.sep}`), "Resource escapes repository");
+async function validateMember(directory, resource) {
   const descriptor = await json(path.join(directory, "resource.json"));
   const payload = resource.kind === "pi-package" ? [] : resource.kind === "agent"
     ? ["rootAgentKey", "agents", "deployments", "skills", "toolkits"] : [resource.kind];
@@ -128,4 +103,52 @@ for (const resource of registry.resources) {
     // ToolPlane applies the complete portable release schema and credential checks on ingestion.
   }
 }
-console.log(`Validated registry index, ${ids.size} resource header(s), and local skill/package descriptors.`);
+
+const registry = await json(path.join(root, "registry.json"));
+object(registry, ["schemaVersion", "packages"]);
+assert.equal(registry.schemaVersion, 2);
+assert(Array.isArray(registry.packages) && registry.packages.length <= 200);
+const ids = new Set();
+for (const entry of registry.packages) {
+  object(entry, ["id", "version", "path"], ["source"]);
+  assert(typeof entry.id === "string" && /^[a-z0-9][a-z0-9._-]{0,99}$/.test(entry.id));
+  assert(!ids.has(entry.id), `Duplicate id: ${entry.id}`);
+  ids.add(entry.id);
+  text(entry.version, 128);
+  assert(semver.test(entry.version), "Version must be SemVer");
+  relativeDirectory(entry.path);
+  if (entry.source !== undefined) {
+    object(entry.source, ["repository", "commit", "path"]);
+    assert(typeof entry.source.repository === "string" && repository.test(entry.source.repository));
+    assert(!entry.source.repository.endsWith(".git") && !entry.source.repository.endsWith("/.."));
+    assert(typeof entry.source.commit === "string" && /^[a-f0-9]{40}$/.test(entry.source.commit));
+    relativeDirectory(entry.source.path);
+    // Remote content is validated by ToolPlane at the exact pinned commit, not fetched or executed in CI.
+    continue;
+  }
+  const packageDirectory = path.join(root, entry.path);
+  await safeTree(packageDirectory);
+  assert((await realpath(packageDirectory)).startsWith(`${root}${path.sep}`), "Package escapes repository");
+  const packageDescriptor = await json(path.join(packageDirectory, "resource.json"));
+  object(packageDescriptor, ["schemaVersion", "kind", "listing", "members"]);
+  assert.equal(packageDescriptor.schemaVersion, 1);
+  assert.equal(packageDescriptor.kind, "resource-package");
+  listing(packageDescriptor.listing);
+  assert(Array.isArray(packageDescriptor.members) && packageDescriptor.members.length >= 1 && packageDescriptor.members.length <= 64, "Package must contain 1–64 members");
+  const memberIds = new Set();
+  const memberPaths = [];
+  for (const resource of packageDescriptor.members) {
+    object(resource, ["id", "kind", "path"]);
+    assert(typeof resource.id === "string" && /^[a-z0-9][a-z0-9._-]{0,99}$/.test(resource.id));
+    assert(!memberIds.has(resource.id), `Duplicate member id: ${resource.id}`);
+    memberIds.add(resource.id);
+    assert(kinds.includes(resource.kind), "Unsupported member kind");
+    relativeDirectory(resource.path);
+    assert(!memberPaths.some((other) => other === resource.path || other.startsWith(`${resource.path}/`) || resource.path.startsWith(`${other}/`)), "Member directories must not overlap");
+    memberPaths.push(resource.path);
+    const directory = path.join(packageDirectory, resource.path);
+    assert((await lstat(directory)).isDirectory(), "Member must be a directory");
+    await validateMember(directory, resource);
+  }
+}
+console.log(`Validated registry index, ${ids.size} resource package(s), and their local member descriptors.`);

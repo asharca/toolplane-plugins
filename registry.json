@@ -1,11 +1,10 @@
 {
-  "schemaVersion": 1,
-  "resources": [
+  "schemaVersion": 2,
+  "packages": [
     {
       "id": "ocrplane-cli",
-      "kind": "skill",
-      "version": "1.0.0",
-      "path": "skills/ocrplane-cli"
+      "version": "1.1.0",
+      "path": "packages/ocrplane-cli"
     }
   ]
 }

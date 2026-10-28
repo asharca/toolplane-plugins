@@ -1,9 +1,9 @@
 # ToolPlane Resources
 
-GitHub-backed resources for ToolPlane's Resource Center. The default registry is
-`asharca/toolplane-resources` on `main`. Skills, MCP definitions, Pi packages,
-Agent templates, and Assistant templates share one index; each resource has an
-independent version and stable identity. The current resource is `ocrplane-cli`.
+GitHub-backed resource packages for ToolPlane's Resource Center. The default
+registry is `asharca/toolplane-resources` on `main`. Each package has a stable
+identity and one version for all its Skill, MCP, Pi package, Agent template and
+Assistant template members. The current package is `ocrplane-cli`.
 
 ## Registry protocol
 
@@ -11,29 +11,56 @@ independent version and stable identity. The current resource is `ocrplane-cli`.
 
 ```json
 {
-  "schemaVersion": 1,
-  "resources": [
+  "schemaVersion": 2,
+  "packages": [
     {
       "id": "ocrplane-cli",
-      "kind": "skill",
-      "version": "1.0.0",
-      "path": "skills/ocrplane-cli"
+      "version": "1.1.0",
+      "path": "packages/ocrplane-cli"
     }
   ]
 }
 ```
 
-- IDs are unique, stable lowercase identifiers (`a-z`, digits, `.`, `_`, `-`).
-  Renaming a directory does not rename a resource ID.
-- Kinds are `skill`, `mcp`, `pi-package`, `agent`, or `assistant`.
-- Versions follow SemVer. Bump the resource's version whenever its released
+- Package IDs are unique, stable lowercase identifiers (`a-z`, digits, `.`, `_`, `-`).
+  Renaming a directory does not rename a package or member ID.
+- Versions follow SemVer. Bump the whole package's version whenever any member
   content or descriptor changes; never reuse a version for different bytes.
 - Paths are safe relative directories without absolute paths, `.` or `..`
-  segments, empty segments, backslashes, or symlinks. Each directory contains
-  `resource.json` with `schemaVersion: 1`, matching `kind`, and `listing` metadata.
-- ToolPlane resolves this registry's branch to one full commit SHA, then reads
-  every local resource from that commit. Existing immutable releases and pins
-  retain their original source and identity.
+  segments, empty segments, backslashes, or symlinks.
+- Every package directory contains `resource.json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "resource-package",
+  "listing": {
+    "slug": "example",
+    "name": "Example package",
+    "summary": null,
+    "iconUrl": null,
+    "tags": [],
+    "author": "Author"
+  },
+  "members": [
+    { "id": "instructions", "kind": "skill", "path": "skills/example" },
+    { "id": "tools", "kind": "mcp", "path": "mcp/example" }
+  ]
+}
+```
+
+The example describes the layout, not bundled executable resources. A package
+contains 1–64 members with unique stable IDs and non-overlapping directories.
+Member kinds are `skill`, `mcp`, `pi-package`, `agent`, and `assistant`; each
+member directory has its own typed `resource.json` as described below. Member
+paths are relative to the package directory, not the repository root. Members
+have no independent registry versions or public listings.
+
+ToolPlane resolves the registry branch to one full commit SHA and reads all
+package bytes at that commit. External sources are also fixed to a commit.
+Installation selects members explicitly; updates display changes without
+silently installing new members, expanding authorization or updating Agent and
+conversation pins. Existing immutable releases retain their original provenance.
 
 An entry may instead add a fixed external source:
 
@@ -41,7 +68,7 @@ An entry may instead add a fixed external source:
 "source": {
   "repository": "owner/repository",
   "commit": "0123456789abcdef0123456789abcdef01234567",
-  "path": "skills/example"
+  "path": "packages/example"
 }
 ```
 
@@ -50,9 +77,9 @@ use a real 40-character lowercase commit SHA, never a branch, tag, or moving URL
 The entry's `path` remains required; `source.path` selects the external directory.
 Do not assume registering private content permits publishing it publicly.
 
-## Authoring resources
+## Authoring package members
 
-A skill descriptor contains only portable metadata:
+A Skill member descriptor contains only portable metadata:
 
 ```json
 {
@@ -103,15 +130,17 @@ variable names only in `requiredEnv`; never embed any environment values,
 including opaque values that do not match a known token pattern. This admission
 rule applies to new GitHub descriptors, not a rewrite of historical releases.
 
-GitHub registry descriptors are the only catalog authoring path, including Agent
-and Assistant templates. Manual workspace/admin catalog create/edit/publish
-flows are retired. Creating or editing a workspace Agent/Assistant remains a
-separate runtime activity and does not publish it to the Resource Center.
+GitHub package descriptors are the only new catalog authoring path, including
+Agent and Assistant templates. New registry sync accepts version 2 only; the
+former standalone-resource index is no longer a publication path. Existing
+immutable releases and installations remain available without rewriting their
+bytes. Creating or editing a workspace Skill, MCP, Agent or Assistant is a
+separate activity and does not publish it to the Resource Center.
 
 ## Maintaining and syncing
 
-1. Edit a resource's files and descriptor, preserving its stable ID.
-2. Increase its version in `registry.json` independently of other resources.
+1. Edit a package's members and descriptor, preserving stable package/member IDs.
+2. Increase the package version in `registry.json`; all its members share this release.
 3. Run `node scripts/validate-registry.mjs`, then submit a pull request.
 4. After merge, a ToolPlane workspace owner/admin requests a GitHub registry
    sync through the Resource Center. Registration requires the repository,
@@ -119,12 +148,12 @@ separate runtime activity and does not publish it to the Resource Center.
    credentials supplied privately to ToolPlane.
 
 The dependency-free Node validator and GitHub Actions check the root index,
-unique IDs, pinned external references, local safe paths, all listing headers,
-complete skill metadata, and package manifest name/version. ToolPlane ingestion
-is authoritative for full MCP/Agent/Assistant schemas, remote source access,
-content safety limits, secret checks, and immutable release creation. CI does
-not execute resource instructions, install their dependencies, or fetch external
-resource content.
+unique package/member IDs, pinned external references, non-overlapping safe
+member directories, all listing headers, complete Skill metadata, and Pi package
+manifest name/version. ToolPlane ingestion is authoritative for full portable
+schemas, remote source access, byte limits, secret checks and immutable release
+creation. CI does not execute member instructions, install dependencies, or
+fetch external package content.
 
 ## Migration provenance and licensing
 
@@ -135,6 +164,10 @@ ancestor of this repository's `main`; the original README and old registry
 format are available in its tree. `migration-provenance.json` records every
 original skill file's source Git blob ID and SHA-256 digest. Those file bytes
 were retained unchanged when descriptors were added.
+
+The version-2 migration moves OCR content under
+`packages/ocrplane-cli/skills/ocrplane-cli/`, preserving its bytes. The provenance
+file retains the original paths as historical evidence, not current import paths.
 
 The source contained no license file or declared GitHub license at migration.
 Migration does not grant a new license or change any existing rights. Preserve
