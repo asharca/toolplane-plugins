@@ -144,8 +144,9 @@ for (const entry of registry.packages) {
     memberIds.add(resource.id);
     assert(kinds.includes(resource.kind), "Unsupported member kind");
     relativeDirectory(resource.path);
-    assert(!memberPaths.some((other) => other === resource.path || other.startsWith(`${resource.path}/`) || resource.path.startsWith(`${other}/`)), "Member directories must not overlap");
-    memberPaths.push(resource.path);
+    const normalizedPath = resource.path.toLowerCase();
+    assert(!memberPaths.some((other) => other === normalizedPath || other.startsWith(`${normalizedPath}/`) || normalizedPath.startsWith(`${other}/`)), "Member directories must not overlap");
+    memberPaths.push(normalizedPath);
     const directory = path.join(packageDirectory, resource.path);
     assert((await lstat(directory)).isDirectory(), "Member must be a directory");
     await validateMember(directory, resource);
