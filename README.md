@@ -92,6 +92,11 @@ This repository continues the Git history of
 paths while recording the current `plugins/ocrplane-cli/skills/ocrplane-cli/`
 target. The skill bytes are unchanged; v3 replaces the v2 composite descriptors.
 The source declared no license; migration grants no new rights. Preserve any
-future resource-specific licenses and attribution. Repository metadata and
-credentials are not published here. No repository deletion, commit or push is
-performed by the validator.
+future resource-specific licenses and attribution.
+
+GitHub repository settings and metadata were exported privately before
+migration; they are not published here. The old production webhook was not
+copied: it targets the retired skill-registry endpoint and its secret cannot be
+recovered from GitHub. Neither this registry nor its CI deletes the old
+repository. Deletion requires separate approval after end-to-end ToolPlane
+verification and confirmation that callers no longer depend on the old URL.
