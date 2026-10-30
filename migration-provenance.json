@@ -8,11 +8,11 @@
     {
       "id": "ocrplane-cli",
       "version": "1.0.0",
-      "path": "skills/ocrplane-cli",
+      "path": "plugins/ocrplane-cli/skills/ocrplane-cli",
       "originalFiles": [
         {
           "sourcePath": "skills/ocrplane-cli/SKILL.md",
-          "targetPath": "skills/ocrplane-cli/SKILL.md",
+          "targetPath": "plugins/ocrplane-cli/skills/ocrplane-cli/SKILL.md",
           "mode": "100644",
           "gitBlob": "8fac7c2400f866d0e81969c339a2ed46244f4996",
           "bytes": 4368,

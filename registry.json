@@ -1,10 +1,4 @@
 {
-  "schemaVersion": 2,
-  "packages": [
-    {
-      "id": "ocrplane-cli",
-      "version": "1.1.0",
-      "path": "packages/ocrplane-cli"
-    }
-  ]
+  "schemaVersion": 3,
+  "plugins": [{ "id": "ocrplane-cli", "path": "plugins/ocrplane-cli" }]
 }

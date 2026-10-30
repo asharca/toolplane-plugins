@@ -1,4 +1,4 @@
-name: Validate resource registry
+name: Validate plugin registry
 
 on:
   push:
@@ -15,5 +15,5 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-      - name: Validate registry and descriptors
+      - name: Validate registry and Pi packages
         run: node scripts/validate-registry.mjs

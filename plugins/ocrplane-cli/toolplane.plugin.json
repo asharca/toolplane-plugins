@@ -1,0 +1,5 @@
+{
+  "name": "OcrPlane CLI",
+  "summary": "Extract OCR text, markdown, tables, formulas and structured document content with the OcrPlane CLI skill.",
+  "tags": ["ocr", "documents", "developer-tools"]
+}

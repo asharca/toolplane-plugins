@@ -1,181 +1,97 @@
-# ToolPlane Resources
+# ToolPlane Plugins
 
-GitHub-backed resource packages for ToolPlane's Resource Center. The default
-registry is `asharca/toolplane-resources` on `main`. Each package has a stable
-identity and one version for all its Skill, MCP, Pi package, Agent template and
-Assistant template members. The current package is `ocrplane-cli`.
+Official Pi packages for the ToolPlane Plugin Center, indexed from
+[`asharca/toolplane-plugins`](https://github.com/asharca/toolplane-plugins).
+A plugin is one Pi package, not a composite of separately installable resources.
 
-## Registry protocol
-
-`registry.json` is required:
+## Registry protocol v3
 
 ```json
 {
-  "schemaVersion": 2,
-  "packages": [
-    {
-      "id": "ocrplane-cli",
-      "version": "1.1.0",
-      "path": "packages/ocrplane-cli"
-    }
-  ]
+  "schemaVersion": 3,
+  "plugins": [{ "id": "ocrplane-cli", "path": "plugins/ocrplane-cli" }]
 }
 ```
 
-- Package IDs are unique, stable lowercase identifiers (`a-z`, digits, `.`, `_`, `-`).
-  Renaming a directory does not rename a package or member ID.
-- Versions follow SemVer. Bump the whole package's version whenever any member
-  content or descriptor changes; never reuse a version for different bytes.
-- Paths are safe relative directories without absolute paths, `.` or `..`
-  segments, empty segments, backslashes, or symlinks.
-- Every package directory contains `resource.json`:
+IDs must match `^[a-z0-9][a-z0-9-]{0,63}$` and be unique. Paths are unique,
+safe relative directories: no absolute paths, traversal, backslashes or symlinks.
+Each directory contains a Pi `package.json`; its SemVer `version` is the plugin
+version. Never reuse the same ID/version for different bytes. Bump the package
+version whenever its content changes; versions do not belong in the index.
+
+A single-plugin repository can omit `registry.json` and put `package.json` at
+the root. ToolPlane derives its ID from the slugified package name.
+
+## Pi resources and metadata
+
+The OCR plugin declares its native Pi skill resource in `package.json`:
 
 ```json
 {
-  "schemaVersion": 1,
-  "kind": "resource-package",
-  "listing": {
-    "slug": "example",
-    "name": "Example package",
-    "summary": null,
-    "iconUrl": null,
-    "tags": [],
-    "author": "Author"
-  },
-  "members": [
-    { "id": "instructions", "kind": "skill", "path": "skills/example" },
-    { "id": "tools", "kind": "mcp", "path": "mcp/example" }
-  ]
+  "name": "@toolplane/ocrplane-cli",
+  "version": "2.0.0",
+  "description": "OCR and document understanding with the OcrPlane CLI skill.",
+  "keywords": ["pi-package", "ocr", "documents"],
+  "pi": { "skills": ["./skills"] }
 }
 ```
 
-The example describes the layout, not bundled executable resources. A package
-contains 1–64 members with unique stable IDs and non-overlapping directories.
-Member kinds are `skill`, `mcp`, `pi-package`, `agent`, and `assistant`; each
-member directory has its own typed `resource.json` as described below. Member
-paths are relative to the package directory, not the repository root. Members
-have no independent registry versions or public listings.
+Instructions live in `skills/ocrplane-cli/SKILL.md`. Pi packages can also declare
+prompts, extensions and themes. Include built, loadable extension outputs where
+needed. Do not include credentials, workspace IDs or environment secret values.
+The skill's CLI and credentials are runtime prerequisites, not installed or
+authorized by registry sync.
 
-ToolPlane resolves the registry branch to one full commit SHA and reads all
-package bytes at that commit. External sources are also fixed to a commit.
-Installation selects members explicitly; updates display changes without
-silently installing new members, expanding authorization or updating Agent and
-conversation pins. Existing immutable releases retain their original provenance.
-
-An entry may instead add a fixed external source:
-
-```json
-"source": {
-  "repository": "owner/repository",
-  "commit": "0123456789abcdef0123456789abcdef01234567",
-  "path": "packages/example"
-}
-```
-
-This is an illustrative SHA, not an available resource. External references must
-use a real 40-character lowercase commit SHA, never a branch, tag, or moving URL.
-The entry's `path` remains required; `source.path` selects the external directory.
-Do not assume registering private content permits publishing it publicly.
-
-## Authoring package members
-
-A Skill member descriptor contains only portable metadata:
-
-```json
-{
-  "schemaVersion": 1,
-  "kind": "skill",
-  "listing": {
-    "slug": "example",
-    "name": "Example",
-    "summary": null,
-    "iconUrl": null,
-    "tags": [],
-    "author": "Author"
-  },
-  "skill": {
-    "name": "Example",
-    "slug": "example",
-    "description": null,
-    "userInvocable": true,
-    "agentInvocable": true,
-    "effort": "default"
-  }
-}
-```
-
-Store actual instructions in `SKILL.md` and keep supporting references, scripts,
-and other files beside it. Do not duplicate `content`, `files`, or `source` in the
-skill descriptor: ToolPlane builds those from the pinned Git tree. Ingestion
-reads instructions as data and does not execute skill scripts.
-
-For `pi-package`, `resource.json` contains the schema header and listing only;
-the actual pinned directory and `package.json` are captured as the package.
-MCP and Assistant descriptors use ToolPlane's existing portable release schemas,
-with `mcp` or `assistant` payloads respectively. An Agent descriptor instead uses
-a **flat portable graph**: `schemaVersion`, `kind: "agent"`, `listing`,
-`rootAgentKey`, `agents`, `deployments`, `skills`, and `toolkits` are root fields;
-there is no nested `agent` payload. `agents` contains 1–64 definitions; the other
-graph arrays allow up to 512 entries, but `toolkits` and each Agent's `toolkitKeys`
-must be empty. Agent templates support only Pi (`runtime: {"kind": "pi"}`);
-omitting runtime selects Pi. Existing non-Pi execution is not restored.
-
-Never include workspace/user credential IDs, API keys, access tokens, private
-environment values, unsafe skill paths, unpinned MCP recipes, or other secrets.
-Runtime authorization and credentials are configured inside ToolPlane, not in
-this public repository. Imported Agents are Pi drafts requiring explicit
-reauthorization before execution; importing a graph does not grant access.
-Every Agent deployment's `publicEnv` must be exactly `{}`. Declare environment
-variable names only in `requiredEnv`; never embed any environment values,
-including opaque values that do not match a known token pattern. This admission
-rule applies to new GitHub descriptors, not a rewrite of historical releases.
-
-GitHub package descriptors are the only new catalog authoring path, including
-Agent and Assistant templates. New registry sync accepts version 2 only; the
-former standalone-resource index is no longer a publication path. Existing
-immutable releases and installations remain available without rewriting their
-bytes. Creating or editing a workspace Skill, MCP, Agent or Assistant is a
-separate activity and does not publish it to the Resource Center.
+Optional `toolplane.plugin.json` supplies `name`, `summary`, `iconUrl` and
+`tags` listing metadata. Without it, ToolPlane uses package `displayName`,
+`description` and `keywords`. There are no `resource.json` member descriptors,
+external-source index entries or standalone Skill/MCP/Agent/Assistant listings.
 
 ## Maintaining and syncing
 
-1. Edit a package's members and descriptor, preserving stable package/member IDs.
-2. Increase the package version in `registry.json`; all its members share this release.
-3. Run `node scripts/validate-registry.mjs`, then submit a pull request.
-4. After merge, a ToolPlane workspace owner/admin requests a GitHub registry
-   sync through the Resource Center. Registration requires the repository,
-   branch, and intended visibility; private repositories require authorized
-   credentials supplied privately to ToolPlane.
+1. Edit plugin files, retaining the stable plugin ID.
+2. Bump `package.json` version.
+3. Run `node scripts/validate-registry.mjs` and submit a pull request.
+4. Merge, then use the configured GitHub push webhook or **Sync now**.
 
-The dependency-free Node validator and GitHub Actions check the root index,
-unique package/member IDs, pinned external references, non-overlapping safe
-member directories, all listing headers, complete Skill metadata, and Pi package
-manifest name/version. ToolPlane ingestion is authoritative for full portable
-schemas, remote source access, byte limits, secret checks and immutable release
-creation. CI does not execute member instructions, install dependencies, or
-fetch external package content.
+The dependency-free validator and CI check v3 structure, safe paths, Pi package
+manifests, declared resource paths and metadata. They do not execute instructions,
+install dependencies or capture packages. ToolPlane's isolated capture and secret
+scan remain authoritative. Sync resolves a fixed commit and auto-approves scanned
+releases. Failed sync retains the last successful catalog. v2 indexes are rejected.
+Removed IDs disappear from discovery; existing immutable installs remain pinned.
+
+Deployers configure the global, read-only official source using
+`TOOLPLANE_OFFICIAL_PLUGIN_REPOSITORY` (default `asharca/toolplane-plugins`, empty
+disables), `TOOLPLANE_OFFICIAL_PLUGIN_BRANCH` (default `main`) and optionally
+`TOOLPLANE_OFFICIAL_PLUGIN_TOKEN` (read at sync time, never stored in the database).
+All workspaces see it with an official badge; only platform admins manually sync
+it. Workspace owners/admins can additionally register public GitHub repositories
+without credentials, or private repositories with an encrypted PAT. Workspace
+sources remain workspace-scoped, even if the GitHub repository is public.
+
+Set server-side `TOOLPLANE_RESOURCE_REGISTRY_WEBHOOK_SECRET`, then configure the
+registry's derived secret and `/api/v1/resource-registries/{registryId}/webhook`
+URL as a GitHub JSON push webhook. Never put the master secret into GitHub. There
+is no update polling or notification system: sync drives the **Update available**
+badge, and a workspace admin explicitly updates the installation.
+
+Selected agents then auto-follow by publishing a new revision. Added MCP
+requirements/tools or changed executable code pause this in **Review required**;
+an owner/admin must approve. Existing sessions keep their immutable snapshots.
+Platform admins can withdraw listings or revoke unsafe releases; GitHub indexing
+never overrides a safety take-down. There is no publication review queue or
+external-client installer.
 
 ## Migration provenance and licensing
 
-This repository continues the complete Git history of
-[`asharca/tp-skills`](https://github.com/asharca/tp-skills), whose migration source
-commit is `290dbb26ded67d0054c3ca468f1ad1aec09f4951`. That commit remains an
-ancestor of this repository's `main`; the original README and old registry
-format are available in its tree. `migration-provenance.json` records every
-original skill file's source Git blob ID and SHA-256 digest. Those file bytes
-were retained unchanged when descriptors were added.
-
-The version-2 migration moves OCR content under
-`packages/ocrplane-cli/skills/ocrplane-cli/`, preserving its bytes. The provenance
-file retains the original paths as historical evidence, not current import paths.
-
-The source contained no license file or declared GitHub license at migration.
-Migration does not grant a new license or change any existing rights. Preserve
-any future resource-specific license and attribution files alongside content.
-
-GitHub repository settings and metadata were exported privately before
-migration; they are not published here. The old production webhook was not
-copied: it targets the retired skill-registry endpoint and its secret cannot be
-recovered from GitHub. No old-repository deletion is performed by this registry
-or its CI. Deletion requires separate approval after end-to-end ToolPlane
-verification and confirmation that callers no longer depend on the old URL.
+This repository continues the Git history of
+[`asharca/tp-skills`](https://github.com/asharca/tp-skills), source commit
+`290dbb26ded67d0054c3ca468f1ad1aec09f4951`.
+`migration-provenance.json` preserves original blob IDs, SHA-256 hashes and source
+paths while recording the current `plugins/ocrplane-cli/skills/ocrplane-cli/`
+target. The skill bytes are unchanged; v3 replaces the v2 composite descriptors.
+The source declared no license; migration grants no new rights. Preserve any
+future resource-specific licenses and attribution. Repository metadata and
+credentials are not published here. No repository deletion, commit or push is
+performed by the validator.
