@@ -4,6 +4,30 @@ Official Pi packages for the ToolPlane Plugin Center, indexed from
 [`asharca/toolplane-plugins`](https://github.com/asharca/toolplane-plugins).
 A plugin is one Pi package, not a composite of separately installable resources.
 
+## Start your own marketplace
+
+Use this repository as the GitHub template: **Use this template → Create a new
+repository**. The official registry uses the same layout, validator, and CI as
+template users; no separate official-only publishing format exists.
+
+```bash
+node scripts/create-plugin.mjs my-review
+node scripts/validate-registry.mjs
+```
+
+The command creates a working read-only Pi review prompt, its README, and the
+registry entry. Customize your plugin, push your repository, then register it in
+ToolPlane under **Plugin Center → Sources**. Public repositories need no token.
+The included OCR plugin is the official reference; remove its registry entry
+if it should not appear in your marketplace. Preserve attribution and licensing
+requirements for content you retain.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, immutable versioning, permissions,
+and contributing plugins to the official registry through a pull request. A
+template-generated repository is independent; fork the official repository when
+you want to submit an upstream pull request.
+
+
 ## Registry protocol v3
 
 ```json
@@ -16,8 +40,10 @@ A plugin is one Pi package, not a composite of separately installable resources.
 IDs must match `^[a-z0-9][a-z0-9-]{0,63}$` and be unique. Paths are unique,
 safe relative directories: no absolute paths, traversal, backslashes or symlinks.
 Each directory contains a Pi `package.json`; its SemVer `version` is the plugin
-version. Never reuse the same ID/version for different bytes. Bump the package
-version whenever its content changes; versions do not belong in the index.
+version. Every plugin includes a root `README.md` describing usage, requirements,
+permissions, configuration, limitations, and licensing. Never reuse the same
+ID/version for different bytes. Bump the package version whenever its content
+changes, including README edits; versions do not belong in the index.
 
 A single-plugin repository can omit `registry.json` and put `package.json` at
 the root. ToolPlane derives its ID from the slugified package name.
@@ -55,8 +81,8 @@ external-source index entries or standalone Skill/MCP/Agent/Assistant listings.
 4. Merge, then use the configured GitHub push webhook or **Sync now**.
 
 The dependency-free validator and CI check v3 structure, safe paths, Pi package
-manifests, declared resource paths and metadata. They do not execute instructions,
-install dependencies or capture packages. ToolPlane's isolated capture and secret
+manifests, declared resource paths, nonempty bounded READMEs, and metadata. They
+do not execute instructions, install dependencies or capture packages. ToolPlane's isolated capture and secret
 scan remain authoritative. Sync resolves a fixed commit and auto-approves scanned
 releases. Failed sync retains the last successful catalog. v2 indexes are rejected.
 Removed IDs disappear from discovery; existing immutable installs remain pinned.

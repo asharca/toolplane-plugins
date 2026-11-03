@@ -29,6 +29,9 @@ async function validatePlugin(entry) {
   const manifest = await json(await safePath(directory, "package.json"));
   assert(object(manifest) && typeof manifest.name === "string" && manifest.name.length, "package name required");
   assert(typeof manifest.version === "string" && semver.test(manifest.version), "package version must be SemVer");
+  const readme = await readFile(await safePath(directory, "README.md"), "utf8");
+  assert(readme.trim().length > 0, "README.md must describe the plugin");
+  assert(Buffer.byteLength(readme, "utf8") <= 262144, "README.md exceeds the 256 KiB display limit");
   assert(object(manifest.pi), "explicit Pi resource declarations required by this repository");
   let count = 0;
   for (const kind of ["skills", "prompts", "extensions", "themes"]) {
