@@ -1,34 +1,23 @@
-# ToolPlane Plugins
+# ToolPlane 官方插件仓库
 
-Official Pi packages for the ToolPlane Plugin Center, indexed from
-[`asharca/toolplane-plugins`](https://github.com/asharca/toolplane-plugins).
-A plugin is one Pi package, not a composite of separately installable resources.
+本仓库为 [ToolPlane 插件中心](https://github.com/asharca/toolplane-plugins)提供官方 Pi 插件。一个插件对应一个原生 Pi 包，不是多个独立安装资源的组合。此仓库是普通 GitHub 仓库，不启用模板功能。
 
-## Start your own marketplace
+## 创建自己的插件市场
 
-Use this repository as the GitHub template: **Use this template → Create a new
-repository**. The official registry uses the same layout, validator, and CI as
-template users; no separate official-only publishing format exists.
+Fork 本仓库，在自己的仓库中维护插件。官方与工作区市场使用相同的目录结构、校验器和 CI，没有官方专属发布格式。
 
 ```bash
 node scripts/create-plugin.mjs my-review
 node scripts/validate-registry.mjs
 ```
 
-The command creates a working read-only Pi review prompt, its README, and the
-registry entry. Customize your plugin, push your repository, then register it in
-ToolPlane under **Plugin Center → Sources**. Public repositories need no token.
-The included OCR plugin is the official reference; remove its registry entry
-if it should not appear in your marketplace. Preserve attribution and licensing
-requirements for content you retain.
+创建命令会生成一个可用的只读代码评审提示、插件 README 和索引项。修改插件后提交到自己的 GitHub 仓库，在 ToolPlane **插件中心 → 来源**登记仓库与分支并同步。公开仓库不需要令牌；私有仓库需明确配置只读凭据。
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, immutable versioning, permissions,
-and contributing plugins to the official registry through a pull request. A
-template-generated repository is independent; fork the official repository when
-you want to submit an upstream pull request.
+内置 OCR 插件作为官方实例；不需要时可从自己的 `registry.json` 删除其条目。保留的内容必须遵守原有署名与许可要求。Fork 不会使你的仓库成为官方来源。
 
+向官方贡献时，在 Fork 中创建分支并提交 Pull Request。详细流程见[贡献指南](CONTRIBUTING.md)。贡献者不会获得直接推送官方分支的权限。
 
-## Registry protocol v3
+## 注册表协议 v3
 
 ```json
 {
@@ -37,92 +26,53 @@ you want to submit an upstream pull request.
 }
 ```
 
-IDs must match `^[a-z0-9][a-z0-9-]{0,63}$` and be unique. Paths are unique,
-safe relative directories: no absolute paths, traversal, backslashes or symlinks.
-Each directory contains a Pi `package.json`; its SemVer `version` is the plugin
-version. Every plugin includes a root `README.md` describing usage, requirements,
-permissions, configuration, limitations, and licensing. Never reuse the same
-ID/version for different bytes. Bump the package version whenever its content
-changes, including README edits; versions do not belong in the index.
+ID 须满足 `^[a-z0-9][a-z0-9-]{0,63}$`，ID 与目录路径均不得重复。路径必须是安全的相对目录，禁止绝对路径、越界、反斜杠和软链接。
 
-A single-plugin repository can omit `registry.json` and put `package.json` at
-the root. ToolPlane derives its ID from the slugified package name.
+每个插件目录包含 Pi `package.json`，其 SemVer `version` 即插件版本，索引中不再填写版本。根目录的 `README.md` 应说明用法、依赖、权限、配置、限制和许可。任何文件变化（包括 README）都必须递增版本，不得用不同内容覆盖已发布的同一 ID／版本。
 
-## Pi resources and metadata
+单插件仓库可以省略 `registry.json`，直接在根目录提供 `package.json`；ToolPlane 从包名派生插件 ID。
 
-The OCR plugin declares its native Pi skill resource in `package.json`:
+## 资源声明与元数据
 
 ```json
 {
   "name": "@toolplane/ocrplane-cli",
-  "version": "2.0.0",
-  "description": "OCR and document understanding with the OcrPlane CLI skill.",
+  "version": "2.0.2",
+  "description": "通过 OcrPlane CLI 技能进行 OCR 和文档理解。",
   "keywords": ["pi-package", "ocr", "documents"],
   "pi": { "skills": ["./skills"] }
 }
 ```
 
-Instructions live in `skills/ocrplane-cli/SKILL.md`. Pi packages can also declare
-prompts, extensions and themes. Include built, loadable extension outputs where
-needed. Do not include credentials, workspace IDs or environment secret values.
-The skill's CLI and credentials are runtime prerequisites, not installed or
-authorized by registry sync.
+技能指令位于 `skills/ocrplane-cli/SKILL.md`。Pi 包也可声明 prompts、extensions 和 themes；需要构建的扩展应包含可直接加载的产物。不得提交凭据、工作区 ID 或环境密钥值。CLI 和凭据属于运行前提，同步市场不会安装或授权它们。
 
-Optional `toolplane.plugin.json` supplies `name`, `summary`, `iconUrl` and
-`tags` listing metadata. Without it, ToolPlane uses package `displayName`,
-`description` and `keywords`. There are no `resource.json` member descriptors,
-external-source index entries or standalone Skill/MCP/Agent/Assistant listings.
+可选的 `toolplane.plugin.json` 提供 `name`、`summary`、`iconUrl` 和 `tags`。省略时使用包的 `displayName`、`description` 与 `keywords`。不使用 `resource.json`、跨仓库下载索引或独立 Skill／MCP／Agent／Assistant 发布条目。
 
-## Maintaining and syncing
+## 维护与同步
 
-1. Edit plugin files, retaining the stable plugin ID.
-2. Bump `package.json` version.
-3. Run `node scripts/validate-registry.mjs` and submit a pull request.
-4. Merge, then use the configured GitHub push webhook or **Sync now**.
+1. 修改插件文件，保持插件 ID 稳定。
+2. 递增 `package.json` 版本。
+3. 运行 `node scripts/validate-registry.mjs`，提交 Pull Request。
+4. 合并后通过已配置的 GitHub push Webhook 或“立即同步”更新目录。
 
-The dependency-free validator and CI check v3 structure, safe paths, Pi package
-manifests, declared resource paths, nonempty bounded READMEs, and metadata. They
-do not execute instructions, install dependencies or capture packages. ToolPlane's isolated capture and secret
-scan remain authoritative. Sync resolves a fixed commit and auto-approves scanned
-releases. Failed sync retains the last successful catalog. v2 indexes are rejected.
-Removed IDs disappear from discovery; existing immutable installs remain pinned.
+无依赖校验器和 CI 检查 v3 结构、安全路径、Pi 声明、资源路径、非空且不超过 256 KiB 的 README 及元数据，不执行插件代码、不安装依赖。平台隔离捕获和密钥扫描仍是最终准入检查。同步解析固定提交；失败保留上一成功目录。v2 索引会被拒绝。删除索引项只移除发现入口，不改变现有固定安装。
 
-Deployers configure the global, read-only official source using
-`TOOLPLANE_OFFICIAL_PLUGIN_REPOSITORY` (default `asharca/toolplane-plugins`, empty
-disables), `TOOLPLANE_OFFICIAL_PLUGIN_BRANCH` (default `main`) and optionally
-`TOOLPLANE_OFFICIAL_PLUGIN_TOKEN` (read at sync time, never stored in the database).
-All workspaces see it with an official badge; only platform admins manually sync
-it. Workspace owners/admins can additionally register public GitHub repositories
-without credentials, or private repositories with an encrypted PAT. Workspace
-sources remain workspace-scoped, even if the GitHub repository is public.
+部署者配置全局只读官方来源：
 
-Set server-side `TOOLPLANE_RESOURCE_REGISTRY_WEBHOOK_SECRET`, then configure the
-registry's derived secret and `/api/v1/resource-registries/{registryId}/webhook`
-URL as a GitHub JSON push webhook. Never put the master secret into GitHub. There
-is no update polling or notification system: sync drives the **Update available**
-badge, and a workspace admin explicitly updates the installation.
+| 环境变量 | 用途 |
+| --- | --- |
+| `TOOLPLANE_OFFICIAL_PLUGIN_REPOSITORY` | 默认 `asharca/toolplane-plugins`；空值禁用 |
+| `TOOLPLANE_OFFICIAL_PLUGIN_BRANCH` | 默认 `main` |
+| `TOOLPLANE_OFFICIAL_PLUGIN_TOKEN` | 可选读取令牌；同步时读取，不写入数据库 |
 
-Selected agents then auto-follow by publishing a new revision. Added MCP
-requirements/tools or changed executable code pause this in **Review required**;
-an owner/admin must approve. Existing sessions keep their immutable snapshots.
-Platform admins can withdraw listings or revoke unsafe releases; GitHub indexing
-never overrides a safety take-down. There is no publication review queue or
-external-client installer.
+官方来源对所有工作区可见，只有平台管理员可手动同步。工作区 owner／admin 可登记自己的公开或私有仓库；私有 PAT 加密保存。即使仓库公开，工作区来源也只对该工作区可见。
 
-## Migration provenance and licensing
+自动同步需配置服务端 `TOOLPLANE_RESOURCE_REGISTRY_WEBHOOK_SECRET`，将来源派生的 Secret 和 `/api/v1/resource-registries/{registryId}/webhook` 地址填入 GitHub JSON push Webhook，不能把服务端主密钥直接交给 GitHub。没有轮询更新机制；同步产生“有更新”标记，由管理员明确升级安装。
 
-This repository continues the Git history of
-[`asharca/tp-skills`](https://github.com/asharca/tp-skills), source commit
-`290dbb26ded67d0054c3ca468f1ad1aec09f4951`.
-`migration-provenance.json` preserves original blob IDs, SHA-256 hashes and source
-paths while recording the current `plugins/ocrplane-cli/skills/ocrplane-cli/`
-target. The skill bytes are unchanged; v3 replaces the v2 composite descriptors.
-The source declared no license; migration grants no new rights. Preserve any
-future resource-specific licenses and attribution.
+Agent 跟随后续发布新修订；新增 MCP 要求、工具或执行代码变化会暂停并要求权限审核。已有会话保持原快照。GitHub 索引不能覆盖管理员撤下或安全撤销。
 
-GitHub repository settings and metadata were exported privately before
-migration; they are not published here. The old production webhook was not
-copied: it targets the retired skill-registry endpoint and its secret cannot be
-recovered from GitHub. Neither this registry nor its CI deletes the old
-repository. Deletion requires separate approval after end-to-end ToolPlane
-verification and confirmation that callers no longer depend on the old URL.
+## 迁移来源与许可
+
+本仓库延续 [`asharca/tp-skills`](https://github.com/asharca/tp-skills) 的历史，来源提交为 `290dbb26ded67d0054c3ca468f1ad1aec09f4951`。`migration-provenance.json` 保留原始 blob ID、SHA-256 和路径，技能文件迁至 `plugins/ocrplane-cli/skills/ocrplane-cli/`，其指令内容未变。原内容没有声明许可证，本仓库不替原作者授予新许可。
+
+迁移前的仓库设置备份不公开。旧生产 Webhook 指向已退役接口，未复制；其密钥无法从 GitHub 恢复。本仓库及 CI 不会删除旧仓库，删除仍需单独批准和端到端验证。

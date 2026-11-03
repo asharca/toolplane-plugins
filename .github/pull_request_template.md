@@ -1,18 +1,17 @@
-## Plugin change
+## 插件变更
 
-Describe the plugin's behavior and the reason for this change.
+说明插件行为及本次修改的原因。
 
-## Runtime and permissions
+## 运行时与权限
 
-State the runtime, required tools, network destinations, configuration names,
-and whether any executable extension is included. Do not include credentials.
+列出运行时、所需工具、网络目标、配置键及是否包含可执行扩展。不要填写凭据值。
 
-## Verification
+## 验证
 
-Describe the real scenario exercised and its result. State any unverified limits.
+说明实际执行的场景、观察结果和未验证的限制。
 
-- [ ] `node scripts/validate-registry.mjs` passes.
-- [ ] The package has a README with usage, requirements, limitations, and licensing.
-- [ ] Changed package bytes use a new SemVer version; published versions are unchanged.
-- [ ] No secrets, private exports, session state, or machine-specific paths are included.
-- [ ] Licensing and attribution have been checked.
+- [ ] `node scripts/validate-registry.mjs` 通过。
+- [ ] 中文 README 包含用法、依赖、限制和许可。
+- [ ] 包内文件变化已递增 SemVer，没有修改已发布版本。
+- [ ] 不包含密钥、私人导出、会话状态或机器私有路径。
+- [ ] 已核对许可和署名。
