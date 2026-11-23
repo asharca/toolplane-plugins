@@ -1,7 +1,20 @@
 {
   "name": "@toolplane/ocrplane-cli",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "OCR and document understanding with the OcrPlane CLI skill.",
   "keywords": ["pi-package", "ocr", "documents"],
-  "pi": { "skills": ["./skills"] }
+  "pi": { "skills": ["./skills"] },
+  "toolplane": {
+    "env": [
+      { "name": "OCRPLANE_BASE_URL", "required": true, "secret": false, "kind": "url" },
+      { "name": "OCRPLANE_API_KEY", "required": true, "secret": true }
+    ],
+    "httpProxies": [
+      {
+        "key": "ocrplane",
+        "baseUrlEnv": "OCRPLANE_BASE_URL",
+        "auth": { "type": "bearer", "secretEnv": "OCRPLANE_API_KEY" }
+      }
+    ]
+  }
 }
