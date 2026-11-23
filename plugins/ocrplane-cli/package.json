@@ -1,6 +1,6 @@
 {
   "name": "@toolplane/ocrplane-cli",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "OCR and document understanding with the OcrPlane CLI skill.",
   "keywords": ["pi-package", "ocr", "documents"],
   "pi": { "skills": ["./skills"] },
